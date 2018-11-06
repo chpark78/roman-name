@@ -17,14 +17,16 @@ public class KoreanRomanVerifier {
     int romanMemento = 0;
     for (int koreanIndex = 0, koreanMemento = 0; koreanIndex < korean.length(); koreanIndex++) {
       found = false;
-      char ko = korean.charAt(koreanIndex);
-      CharTreeNode node = dictionary.get(ko);
+      char koreanChar = korean.charAt(koreanIndex);
+      CharTreeNode node = dictionary.get(koreanChar);
       for (; romanIndex < roman.length(); romanIndex++) {
-        char ro = roman.charAt(romanIndex);
-        node = node.getChild(ro);
+        char romanChar = roman.charAt(romanIndex);
+
+        node = node.getChild(romanChar);
         if (node == null) {
           break;
         }
+
         if (node.canEnd()) {
           found = true;
           if (node.canContinue()) {
@@ -35,6 +37,7 @@ public class KoreanRomanVerifier {
           break;
         }
       }
+
       if (!found) {
         if (romanMemento == 0) {
           break;
@@ -51,7 +54,7 @@ public class KoreanRomanVerifier {
     Path filePath = Paths.get(fileUri);
     Map<Character, CharTreeNode> dictionary = new DictionaryLoader().load(filePath);
     KoreanRomanVerifier verifier = new KoreanRomanVerifier(dictionary);
-    boolean result = verifier.verify("박찬호", "PAKRCHANPO");
+    boolean result = verifier.verify("박찬호", "PAKCHANPO");
     System.out.println(result);
   }
 

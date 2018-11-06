@@ -28,7 +28,7 @@ public class CharTreeNode {
   }
 
   public boolean canContinue() {
-    return canEnd() ? children.size() > 1 : !children.isEmpty();
+    return children.size() > (canEnd() ? 1 : 0);
   }
 
   @Override
