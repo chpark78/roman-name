@@ -23,6 +23,10 @@ public class CharTreeNode {
     children.put(child.self, child);
   }
 
+  public boolean isEnd() {
+    return self == ' ';
+  }
+
   public boolean canEnd() {
     return children.containsKey(' ');
   }

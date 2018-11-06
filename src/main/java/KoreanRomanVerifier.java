@@ -12,6 +12,8 @@ public class KoreanRomanVerifier {
   }
 
   public boolean verify(String korean, String roman) {
+    roman = roman.replaceAll("[ ]{2,}", " "); // normalize
+
     boolean found = false;
     int romanIndex = 0;
     int romanMemento = 0;
@@ -29,11 +31,16 @@ public class KoreanRomanVerifier {
 
         if (node.canEnd()) {
           found = true;
-          if (node.canContinue()) {
-            romanMemento = romanIndex;
-            koreanMemento = koreanIndex;
+          char nextRomanChar = romanIndex + 1 < roman.length() ? roman.charAt(romanIndex + 1) : '@';
+          if (nextRomanChar == ' ') {
+            romanIndex += 2;
+          } else {
+            if (node.canContinue()) {
+              romanMemento = romanIndex;
+              koreanMemento = koreanIndex;
+            }
+            romanIndex++;
           }
-          romanIndex++;
           break;
         }
       }
@@ -54,7 +61,7 @@ public class KoreanRomanVerifier {
     Path filePath = Paths.get(fileUri);
     Map<Character, CharTreeNode> dictionary = new DictionaryLoader().load(filePath);
     KoreanRomanVerifier verifier = new KoreanRomanVerifier(dictionary);
-    boolean result = verifier.verify("박찬호", "PAKCHANPO");
+    boolean result = verifier.verify("박찬호", "PARK  CHAN  HO");
     System.out.println(result);
   }
 
