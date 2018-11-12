@@ -13,36 +13,50 @@ public class KoreanRomanMatcher2 {
   }
 
   public boolean matches(String hangleName, String romanLastName, String romanFirstName) {
-    String romanName = romanLastName + " " + romanFirstName;
-    romanName = normalize(romanName);
+    String romanName = normalize(romanLastName + " " + romanFirstName);
 
     List<CharSequenceFinder> finders = new ArrayList<>();
-    for (int i = 0; i < hangleName.length(); i++) {
+    int lastFinerIndex = hangleName.length() - 1;
+    for (int i = 0; i <= lastFinerIndex; i++) {
       char hangleChar = hangleName.charAt(i);
       LinkedCharSequence sequence = dictionary.get(hangleChar);
       finders.add(new CharSequenceFinder(sequence, romanName));
     }
 
     int romanNameIndex = 0;
-    for (int i = 0; i < hangleName.length(); i++) {
+    int romanNameLength = romanName.length();
+    boolean rollback = false;
+    for (int i = 0; i < finders.size(); i++) {
       CharSequenceFinder finder = finders.get(i);
-      finder.resetIndex(romanNameIndex);
-      if (finder.hasNext()) {
-        romanNameIndex = finder.next();
-      } else {
-        if (i == 0) {
-          break;
-        }
-        finder.resetSeq();
-        i--;
+
+      if (!rollback) {
+        finder.find(romanNameIndex);
       }
+
+      if (i == lastFinerIndex) {
+        while (finder.hasNext()) {
+          romanNameIndex = finder.next() + 1;
+          if (romanNameIndex == romanNameLength) {
+            return true;
+          }
+        }
+      } else if (finder.hasNext()) {
+        romanNameIndex = finder.next() + 1;
+        rollback = false;
+        continue;
+      } else if (i == 0) {
+        return false;
+      }
+
+      rollback = true;
+      i -= 2;
     }
 
-    return romanName.length() == romanNameIndex;
+    return false;
   }
 
   private String normalize(String roman) {
-    return roman.replaceAll("[ ]{2,}", " -");
+    return roman.replaceAll("[ ]{2,}", " ");
   }
 
 }

@@ -26,8 +26,9 @@ public class Test {
     // KoreanRomanMatcher matcher = new KoreanRomanMatcher(dictionary);
 
     List<String> testDataLines = Files.readAllLines(Paths.get(classLoader.getResource("hangle_roman_testset.tsv").toURI()));
-    for (String testDataLine : testDataLines) {
-      System.out.println(testDataLine);
+    for (int i = 0; i < testDataLines.size(); i++) {
+      String testDataLine = testDataLines.get(i);
+      // System.out.println(i + " " + testDataLine);
 
       long startTimeMillis = System.currentTimeMillis();
 
@@ -43,7 +44,7 @@ public class Test {
       if (expected == actual) {
         // System.out.println("Expected: " + expected + ", Actual: " + actual + ", Latency: " + elapsedTimeMillis + " ms, " + testDataLine);
       } else {
-        System.err.println("Expected: " + expected + ", Actual: " + actual + ", Latency: " + elapsedTimeMillis + " ms, " + testDataLine);
+        System.err.println(i + " Expected: " + expected + ", Actual: " + actual + ", Latency: " + elapsedTimeMillis + " ms, " + testDataLine);
       }
     }
   }

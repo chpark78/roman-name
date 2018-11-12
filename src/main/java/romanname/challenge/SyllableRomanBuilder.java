@@ -11,6 +11,8 @@ import java.util.*;
 public class SyllableRomanBuilder {
 
   public List<String> build(Path syllableRomanFilePath, Path syllableFilePath) throws Exception {
+    List<String> syllableRomanPairs = new ArrayList<>();
+
     Map<String, Set<String>> chosungMap = new HashMap<>();
     Map<String, Set<String>> jungsungMap = new HashMap<>();
     Map<String, Set<String>> jongsungMap = new HashMap<>();
@@ -32,16 +34,17 @@ public class SyllableRomanBuilder {
         case "JONGSUNG":
           romans = jongsungMap.computeIfAbsent(syllable, k -> new HashSet<>());
           break;
+        case "SYLLABLE":
+          syllableRomanPairs.add(syllable + " " + roman);
+          continue;
         default:
           continue;
       }
-
       romans.add(roman);
     }
 
     List<String> syllables = Files.readAllLines(syllableFilePath);
 
-    List<String> syllableRomanPairs = new ArrayList<>();
     for (String hangle : syllables) {
       List<String> jasos = TextUtils.hangleToJaso(hangle);
 

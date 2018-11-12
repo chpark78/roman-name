@@ -1,57 +1,55 @@
 package romanname.challenge;
 
+import java.util.Deque;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 public class CharSequenceFinder implements Iterator<Integer> {
 
-  private final LinkedCharSequence startSeq;
+  private final LinkedCharSequence seq;
 
-  private final String target;
+  private final String str;
 
-  private int currentIndex;
+  private Deque<Integer> matches;
 
-  private LinkedCharSequence currentSeq;
-
-  public CharSequenceFinder(LinkedCharSequence startSeq, String target) {
-    this.startSeq = startSeq;
-    this.target = target;
-    currentSeq = startSeq;
+  public CharSequenceFinder(LinkedCharSequence seq, String str) {
+    this.seq = seq;
+    this.str = str;
   }
 
-  public void resetIndex(int startIndex) {
-    currentIndex = startIndex;
-  }
-
-  public void resetSeq() {
-    currentSeq = startSeq;
-  }
-
-  @Override
-  public boolean hasNext() {
-    boolean hasNext = false;
-    for (; currentIndex < target.length(); currentIndex++) {
-      char ch = target.charAt(currentIndex);
+  public void find(int startIndex) {
+    matches = new LinkedList<>();
+    LinkedCharSequence currentSeq = seq;
+    for (int i = startIndex; i < str.length(); i++) {
+      char ch = str.charAt(i);
       if (ch == ' ') {
-        continue;
+        if (i == startIndex) {
+          continue;
+        } else {
+          break;
+        }
       }
 
       LinkedCharSequence nextSeq = currentSeq.nextStartWith(ch);
       if (nextSeq == null) {
         break;
       }
+
       currentSeq = nextSeq;
       if (nextSeq.canBreak()) {
-        hasNext = true;
-        currentIndex++;
-        break;
+        matches.push(i);
       }
     }
-    return hasNext;
+  }
+
+  @Override
+  public boolean hasNext() {
+    return !matches.isEmpty();
   }
 
   @Override
   public Integer next() {
-    return currentIndex;
+    return matches.pollFirst();
   }
 
 }
