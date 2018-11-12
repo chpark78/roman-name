@@ -21,14 +21,11 @@ public class Test {
     Files.write(Paths.get(classLoader.getResource("syllable-roman.map").toURI()), syllableRomanPairs, StandardOpenOption.TRUNCATE_EXISTING);
     Map<Character, LinkedCharSequence> dictionary = new SyllableRomanSequenceBuilder().build(syllableRomanPairs);
 
-    KoreanRomanMatcher2 matcher = new KoreanRomanMatcher2(dictionary);
-
-    // KoreanRomanMatcher matcher = new KoreanRomanMatcher(dictionary);
+    KoreanRomanMatcher matcher = new KoreanRomanMatcher(dictionary);
 
     List<String> testDataLines = Files.readAllLines(Paths.get(classLoader.getResource("hangle_roman_testset.tsv").toURI()));
     for (int i = 0; i < testDataLines.size(); i++) {
       String testDataLine = testDataLines.get(i);
-      // System.out.println(i + " " + testDataLine);
 
       long startTimeMillis = System.currentTimeMillis();
 
