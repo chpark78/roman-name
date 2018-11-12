@@ -25,12 +25,12 @@ public class LinkedCharSequence {
     children.put(other.self, other);
   }
 
-  public boolean canEnd() {
+  public boolean canBreak() {
     return children.containsKey(' ');
   }
 
   public boolean canContinue() {
-    return children.size() > (canEnd() ? 1 : 0);
+    return children.size() > (canBreak() ? 1 : 0);
   }
 
   @Override
@@ -38,7 +38,7 @@ public class LinkedCharSequence {
     if (self == ' ' && children.isEmpty()) {
       return "END";
     }
-    return "{" + (self == ' ' ? "BEGIN" : self) + ", " + children.values() + '}';
+    return self + "->" + children.values();
   }
 
 }

@@ -26,7 +26,7 @@ public class SyllableRomanSequenceBuilder {
       Character syllable = parts[0].charAt(0);
       String roman = parts.length < 2 ? "" : parts[1];
 
-      LinkedCharSequence node = dictionary.computeIfAbsent(syllable, k -> new LinkedCharSequence(' '));
+      LinkedCharSequence node = dictionary.computeIfAbsent(syllable, k -> new LinkedCharSequence(syllable));
       for (int i = 0; i < roman.length(); i++) {
         char child = roman.charAt(i);
         LinkedCharSequence childNode = node.nextStartWith(child);

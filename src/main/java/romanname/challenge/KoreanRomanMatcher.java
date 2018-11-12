@@ -1,11 +1,5 @@
 package romanname.challenge;
 
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.util.List;
 import java.util.Map;
 
 public class KoreanRomanMatcher {
@@ -33,12 +27,15 @@ public class KoreanRomanMatcher {
       if (restore) {
         romanIndex = romanMemento + 1;
         seq = seqMemento;
+        romanMemento = -1;
+        hangleMemento = -1;
+        seqMemento = null;
         restore = false;
       } else {
         seq = dictionary.get(hangleChar);
       }
 
-      // System.out.println(hangleChar + ": " + seq);
+      // System.out.println(seq);
       for (; romanIndex < romanName.length(); romanIndex++) {
         char romanChar = romanName.charAt(romanIndex);
 
@@ -49,7 +46,7 @@ public class KoreanRomanMatcher {
 
         // System.out.println(String.valueOf(romanChar + ": " + seq));
 
-        if (seq.canEnd()) {
+        if (seq.canBreak()) {
           found = true;
           char nextRomanChar = romanIndex + 1 < romanName.length() ? romanName.charAt(romanIndex + 1) : '@';
           if (nextRomanChar == ' ') {

@@ -21,10 +21,14 @@ public class Test {
     Files.write(Paths.get(classLoader.getResource("syllable-roman.map").toURI()), syllableRomanPairs, StandardOpenOption.TRUNCATE_EXISTING);
     Map<Character, LinkedCharSequence> dictionary = new SyllableRomanSequenceBuilder().build(syllableRomanPairs);
 
-    KoreanRomanMatcher matcher = new KoreanRomanMatcher(dictionary);
+    KoreanRomanMatcher2 matcher = new KoreanRomanMatcher2(dictionary);
+
+    // KoreanRomanMatcher matcher = new KoreanRomanMatcher(dictionary);
 
     List<String> testDataLines = Files.readAllLines(Paths.get(classLoader.getResource("hangle_roman_testset.tsv").toURI()));
     for (String testDataLine : testDataLines) {
+      System.out.println(testDataLine);
+
       long startTimeMillis = System.currentTimeMillis();
 
       String[] testData = testDataLine.split("\t");
@@ -37,7 +41,7 @@ public class Test {
 
       long elapsedTimeMillis = System.currentTimeMillis() - startTimeMillis;
       if (expected == actual) {
-        System.out.println("Expected: " + expected + ", Actual: " + actual + ", Latency: " + elapsedTimeMillis + " ms, " + testDataLine);
+        // System.out.println("Expected: " + expected + ", Actual: " + actual + ", Latency: " + elapsedTimeMillis + " ms, " + testDataLine);
       } else {
         System.err.println("Expected: " + expected + ", Actual: " + actual + ", Latency: " + elapsedTimeMillis + " ms, " + testDataLine);
       }
