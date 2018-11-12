@@ -19,9 +19,10 @@ public class Test {
 
     List<String> syllableRomanPairs = new SyllableRomanBuilder().build(syllableRomanFilePath, syllableFilePath);
     Files.write(Paths.get(classLoader.getResource("syllable-roman.map").toURI()), syllableRomanPairs, StandardOpenOption.TRUNCATE_EXISTING);
-    Map<Character, LinkedCharSequence> dictionary = new SyllableRomanSequenceBuilder().build(syllableRomanPairs);
+    Map<String, String> nameDictionary = new NameDictionaryBuilder().build(syllableRomanFilePath);
+    Map<Character, LinkedCharSequence> syllableRomanSequenceMap = new SyllableRomanSequenceBuilder().build(syllableRomanPairs);
 
-    KoreanRomanMatcher matcher = new KoreanRomanMatcher(dictionary);
+    KoreanRomanMatcher matcher = new KoreanRomanMatcher(nameDictionary, syllableRomanSequenceMap);
 
     List<String> testDataLines = Files.readAllLines(Paths.get(classLoader.getResource("hangle_roman_testset.tsv").toURI()));
     for (int i = 0; i < testDataLines.size(); i++) {

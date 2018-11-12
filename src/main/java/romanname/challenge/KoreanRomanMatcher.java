@@ -6,20 +6,48 @@ import java.util.Map;
 
 public class KoreanRomanMatcher {
 
-  private final Map<Character, LinkedCharSequence> dictionary;
+  private final Map<String, String> nameDictionary;
 
-  public KoreanRomanMatcher(Map<Character, LinkedCharSequence> dictionary) {
-    this.dictionary = dictionary;
+  private final Map<Character, LinkedCharSequence> syllableRomanSequenceMap;
+
+  public KoreanRomanMatcher(Map<String, String> nameDictionary, Map<Character, LinkedCharSequence> syllableRomanSequenceMap) {
+    this.nameDictionary = nameDictionary;
+    this.syllableRomanSequenceMap = syllableRomanSequenceMap;
   }
 
   public boolean matches(String hangleName, String romanLastName, String romanFirstName) {
-    String romanName = normalize(romanLastName + " " + romanFirstName);
+    String lastName = nameDictionary.get(romanLastName);
+    if (lastName != null) {
+      String newHangleName = hangleName.replaceAll("^" + lastName + "|" + lastName + "$", "").trim();
+      if (hangleName.length() != newHangleName.length()) {
+        hangleName = newHangleName;
+        romanLastName = "";
+      }
+    }
 
+    String firstName = nameDictionary.get(romanFirstName);
+    if (firstName != null) {
+      String newHangleName = hangleName.replaceAll("^" + firstName + "|" + firstName + "$", "").trim();
+      if (hangleName.length() != newHangleName.length()) {
+        hangleName = newHangleName;
+        romanFirstName = "";
+      }
+    }
+
+    if (hangleName.isEmpty()) {
+      return true;
+    }
+
+    String romanName = normalize(romanLastName + " " + romanFirstName).trim();
+    return matches(hangleName, romanName);
+  }
+
+  private boolean matches(String hangleName, String romanName) {
     List<CharSequenceFinder> finders = new ArrayList<>();
     int lastFinerIndex = hangleName.length() - 1;
     for (int i = 0; i <= lastFinerIndex; i++) {
       char hangleChar = hangleName.charAt(i);
-      LinkedCharSequence sequence = dictionary.get(hangleChar);
+      LinkedCharSequence sequence = syllableRomanSequenceMap.get(hangleChar);
       finders.add(new CharSequenceFinder(sequence, romanName));
     }
 
