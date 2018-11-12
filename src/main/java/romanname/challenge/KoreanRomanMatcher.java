@@ -16,30 +16,32 @@ public class KoreanRomanMatcher {
   }
 
   public boolean matches(String hangleName, String romanLastName, String romanFirstName) {
-    String lastName = nameDictionary.get(romanLastName);
-    if (lastName != null) {
-      String newHangleName = hangleName.replaceAll("^" + lastName + "|" + lastName + "$", "").trim();
-      if (hangleName.length() != newHangleName.length()) {
-        hangleName = newHangleName;
-        romanLastName = "";
-      }
+    String newHangleName = findName(hangleName, romanLastName);
+    if (newHangleName.length() != hangleName.length()) {
+      hangleName = newHangleName;
+      romanLastName = "";
     }
 
-    String firstName = nameDictionary.get(romanFirstName);
-    if (firstName != null) {
-      String newHangleName = hangleName.replaceAll("^" + firstName + "|" + firstName + "$", "").trim();
-      if (hangleName.length() != newHangleName.length()) {
-        hangleName = newHangleName;
-        romanFirstName = "";
-      }
+    newHangleName = findName(hangleName, romanFirstName);
+    if (newHangleName.length() != hangleName.length()) {
+      hangleName = newHangleName;
+      romanFirstName = "";
     }
 
     if (hangleName.isEmpty()) {
       return true;
     }
 
-    String romanName = normalize(romanLastName + " " + romanFirstName).trim();
+    String romanName = normalize(romanLastName + " " + romanFirstName);
     return matches(hangleName, romanName);
+  }
+
+  private String findName(String hangleName, String romanName) {
+    String name = nameDictionary.get(romanName);
+    if (name != null) {
+      hangleName = hangleName.replaceAll("^" + name + "|" + name + "$", "").trim();
+    }
+    return hangleName;
   }
 
   private boolean matches(String hangleName, String romanName) {
@@ -84,7 +86,7 @@ public class KoreanRomanMatcher {
   }
 
   private String normalize(String roman) {
-    return roman.replaceAll("[ ]{2,}", " ");
+    return roman.replaceAll("[ ]{2,}", " ").trim();
   }
 
 }
