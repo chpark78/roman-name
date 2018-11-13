@@ -48,15 +48,16 @@ public class GazuaHangleRomanMatcher implements HangleRomanMatcher {
   }
 
   private MatchedResult matches(String hangleName, String romanName) {
-    List<CharSequenceFinder> finders = new ArrayList<>();
+    List<CharSequenceFinder> finders = new ArrayList<>(hangleName.length());
+    List<MatchedEntry> matchedEntries = new ArrayList<>(hangleName.length());
     int lastFinerIndex = hangleName.length() - 1;
     for (int i = 0; i <= lastFinerIndex; i++) {
       char hangleChar = hangleName.charAt(i);
       LinkedCharSequence sequence = syllableRomanSequenceMap.get(hangleChar);
       finders.add(new CharSequenceFinder(sequence, romanName));
+      matchedEntries.add(new MatchedEntry(String.valueOf(hangleChar), "", false));
     }
 
-    LinkedList<MatchedEntry> matchedEntries = new LinkedList<>();
     int romanNameIndex = 0;
     int romanNameLength = romanName.length();
     boolean rollback = false;
@@ -69,27 +70,25 @@ public class GazuaHangleRomanMatcher implements HangleRomanMatcher {
 
       if (i == lastFinerIndex) {
         while (finder.hasNext()) {
-          int newRomanNameIndex = finder.next() + 1;
-          if (newRomanNameIndex == romanNameLength) {
+          romanNameIndex = finder.next() + 1;
+          if (romanNameIndex == romanNameLength) {
             String hangle = String.valueOf(hangleName.charAt(i));
-            String roman = romanName.substring(finder.getBeginIndex(), newRomanNameIndex);
-            matchedEntries.add(new MatchedEntry(hangle, roman, true));
+            String roman = romanName.substring(finder.getBeginIndex(), romanNameIndex);
+            matchedEntries.set(i, new MatchedEntry(hangle, roman, true));
             return new MatchedResult(true, matchedEntries);
           }
         }
       } else if (finder.hasNext()) {
-        int newRomanNameIndex = finder.next() + 1;
+        romanNameIndex = finder.next() + 1;
         String hangle = String.valueOf(hangleName.charAt(i));
-        String roman = romanName.substring(finder.getBeginIndex(), newRomanNameIndex);
-        matchedEntries.add(new MatchedEntry(hangle, roman, true));
-        romanNameIndex = newRomanNameIndex;
+        String roman = romanName.substring(finder.getBeginIndex(), romanNameIndex);
+        matchedEntries.set(i, new MatchedEntry(hangle, roman, true));
         rollback = false;
         continue;
       } else if (i == 0) {
         return new MatchedResult(false, matchedEntries);
       }
 
-      matchedEntries.pollFirst();
       rollback = true;
       i -= 2;
     }
