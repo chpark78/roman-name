@@ -1,5 +1,7 @@
 package romanname.challenge;
 
+import romanname.MatchedResult;
+
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,7 +24,7 @@ public class Test {
     Map<String, String> nameDictionary = new NameDictionaryBuilder().build(syllableRomanFilePath);
     Map<Character, LinkedCharSequence> syllableRomanSequenceMap = new SyllableRomanSequenceBuilder().build(syllableRomanPairs);
 
-    KoreanRomanMatcher matcher = new KoreanRomanMatcher(nameDictionary, syllableRomanSequenceMap);
+    GazuaHangleRomanMatcher matcher = new GazuaHangleRomanMatcher(nameDictionary, syllableRomanSequenceMap);
 
     List<String> testDataLines = Files.readAllLines(Paths.get(classLoader.getResource("hangle_roman_testset.tsv").toURI()));
     for (int i = 0; i < testDataLines.size(); i++) {
@@ -36,10 +38,10 @@ public class Test {
       String romanFirstName = testData[2];
       boolean expected = testData[3].equals("O");
 
-      boolean actual = matcher.matches(hangleName, romanLastName, romanFirstName);
+      MatchedResult actual = matcher.matching(hangleName, romanFirstName, romanLastName);
 
       long elapsedTimeMillis = System.currentTimeMillis() - startTimeMillis;
-      if (expected == actual) {
+      if (expected == actual.isMatched()) {
         // System.out.println("Expected: " + expected + ", Actual: " + actual + ", Latency: " + elapsedTimeMillis + " ms, " + testDataLine);
       } else {
         System.err.println(i + " Expected: " + expected + ", Actual: " + actual + ", Latency: " + elapsedTimeMillis + " ms, " + testDataLine);

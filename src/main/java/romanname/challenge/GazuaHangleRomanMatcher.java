@@ -1,21 +1,26 @@
 package romanname.challenge;
 
+import romanname.HangleRomanMatcher;
+import romanname.MatchedResult;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class KoreanRomanMatcher {
+public class GazuaHangleRomanMatcher implements HangleRomanMatcher {
 
   private final Map<String, String> nameDictionary;
 
   private final Map<Character, LinkedCharSequence> syllableRomanSequenceMap;
 
-  public KoreanRomanMatcher(Map<String, String> nameDictionary, Map<Character, LinkedCharSequence> syllableRomanSequenceMap) {
+  public GazuaHangleRomanMatcher(Map<String, String> nameDictionary, Map<Character, LinkedCharSequence> syllableRomanSequenceMap) {
     this.nameDictionary = nameDictionary;
     this.syllableRomanSequenceMap = syllableRomanSequenceMap;
   }
 
-  public boolean matches(String hangleName, String romanLastName, String romanFirstName) {
+  @Override
+  public MatchedResult matching(String hangleName, String romanFirstName, String romanLastName) {
     String newHangleName = findName(hangleName, romanLastName);
     if (newHangleName.length() != hangleName.length()) {
       hangleName = newHangleName;
@@ -29,11 +34,12 @@ public class KoreanRomanMatcher {
     }
 
     if (hangleName.isEmpty()) {
-      return true;
+      return new MatchedResult(true, Collections.emptyList());
     }
 
     String romanName = normalize(romanLastName + " " + romanFirstName);
-    return matches(hangleName, romanName);
+    boolean matched = matches(hangleName, romanName);
+    return new MatchedResult(matched, Collections.emptyList());
   }
 
   private String findName(String hangleName, String romanName) {
