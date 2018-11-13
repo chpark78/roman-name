@@ -56,7 +56,7 @@ public class GazuaHangleRomanMatcher implements HangleRomanMatcher {
       finders.add(new CharSequenceFinder(sequence, romanName));
     }
 
-    List<MatchedEntry> matchedEntries = new LinkedList<>();
+    LinkedList<MatchedEntry> matchedEntries = new LinkedList<>();
     int romanNameIndex = 0;
     int romanNameLength = romanName.length();
     boolean rollback = false;
@@ -72,7 +72,7 @@ public class GazuaHangleRomanMatcher implements HangleRomanMatcher {
           int newRomanNameIndex = finder.next() + 1;
           if (newRomanNameIndex == romanNameLength) {
             String hangle = String.valueOf(hangleName.charAt(i));
-            String roman = romanName.substring(romanNameIndex, newRomanNameIndex);
+            String roman = romanName.substring(finder.getBeginIndex(), newRomanNameIndex);
             matchedEntries.add(new MatchedEntry(hangle, roman, true));
             return new MatchedResult(true, matchedEntries);
           }
@@ -80,7 +80,7 @@ public class GazuaHangleRomanMatcher implements HangleRomanMatcher {
       } else if (finder.hasNext()) {
         int newRomanNameIndex = finder.next() + 1;
         String hangle = String.valueOf(hangleName.charAt(i));
-        String roman = romanName.substring(romanNameIndex, newRomanNameIndex);
+        String roman = romanName.substring(finder.getBeginIndex(), newRomanNameIndex);
         matchedEntries.add(new MatchedEntry(hangle, roman, true));
         romanNameIndex = newRomanNameIndex;
         rollback = false;
@@ -89,6 +89,7 @@ public class GazuaHangleRomanMatcher implements HangleRomanMatcher {
         return new MatchedResult(false, matchedEntries);
       }
 
+      matchedEntries.pollFirst();
       rollback = true;
       i -= 2;
     }

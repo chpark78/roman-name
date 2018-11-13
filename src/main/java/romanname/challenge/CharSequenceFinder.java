@@ -12,18 +12,20 @@ public class CharSequenceFinder implements Iterator<Integer> {
 
   private Deque<Integer> matches;
 
+  private int beginIndex;
+
   public CharSequenceFinder(LinkedCharSequence seq, String str) {
     this.seq = seq;
     this.str = str;
   }
 
-  public void find(int startIndex) {
+  public void find(int beginIndex) {
     matches = new LinkedList<>();
     LinkedCharSequence currentSeq = seq;
-    for (int i = startIndex; i < str.length(); i++) {
+    for (int i = this.beginIndex = beginIndex; i < str.length(); i++) {
       char ch = str.charAt(i);
       if (ch == ' ') {
-        if (i == startIndex) {
+        if (i == beginIndex) {
           continue;
         } else {
           break;
@@ -40,6 +42,10 @@ public class CharSequenceFinder implements Iterator<Integer> {
         matches.push(i);
       }
     }
+  }
+
+  public int getBeginIndex() {
+    return beginIndex;
   }
 
   @Override
