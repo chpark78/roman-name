@@ -1,12 +1,10 @@
 package romanname.challenge;
 
 import romanname.HangleRomanMatcher;
+import romanname.MatchedEntry;
 import romanname.MatchedResult;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class GazuaHangleRomanMatcher implements HangleRomanMatcher {
 
@@ -38,8 +36,7 @@ public class GazuaHangleRomanMatcher implements HangleRomanMatcher {
     }
 
     String romanName = normalize(romanLastName + " " + romanFirstName);
-    boolean matched = matches(hangleName, romanName);
-    return new MatchedResult(matched, Collections.emptyList());
+    return matches(hangleName, romanName);
   }
 
   private String findName(String hangleName, String romanName) {
@@ -50,7 +47,7 @@ public class GazuaHangleRomanMatcher implements HangleRomanMatcher {
     return hangleName;
   }
 
-  private boolean matches(String hangleName, String romanName) {
+  private MatchedResult matches(String hangleName, String romanName) {
     List<CharSequenceFinder> finders = new ArrayList<>();
     int lastFinerIndex = hangleName.length() - 1;
     for (int i = 0; i <= lastFinerIndex; i++) {
@@ -59,6 +56,7 @@ public class GazuaHangleRomanMatcher implements HangleRomanMatcher {
       finders.add(new CharSequenceFinder(sequence, romanName));
     }
 
+    List<MatchedEntry> matchedEntries = new LinkedList<>();
     int romanNameIndex = 0;
     int romanNameLength = romanName.length();
     boolean rollback = false;
@@ -71,24 +69,31 @@ public class GazuaHangleRomanMatcher implements HangleRomanMatcher {
 
       if (i == lastFinerIndex) {
         while (finder.hasNext()) {
-          romanNameIndex = finder.next() + 1;
-          if (romanNameIndex == romanNameLength) {
-            return true;
+          int newRomanNameIndex = finder.next() + 1;
+          if (newRomanNameIndex == romanNameLength) {
+            String hangle = String.valueOf(hangleName.charAt(i));
+            String roman = romanName.substring(romanNameIndex, newRomanNameIndex);
+            matchedEntries.add(new MatchedEntry(hangle, roman, true));
+            return new MatchedResult(true, matchedEntries);
           }
         }
       } else if (finder.hasNext()) {
-        romanNameIndex = finder.next() + 1;
+        int newRomanNameIndex = finder.next() + 1;
+        String hangle = String.valueOf(hangleName.charAt(i));
+        String roman = romanName.substring(romanNameIndex, newRomanNameIndex);
+        matchedEntries.add(new MatchedEntry(hangle, roman, true));
+        romanNameIndex = newRomanNameIndex;
         rollback = false;
         continue;
       } else if (i == 0) {
-        return false;
+        return new MatchedResult(false, matchedEntries);
       }
 
       rollback = true;
       i -= 2;
     }
 
-    return false;
+    return new MatchedResult(false, matchedEntries);
   }
 
   private String normalize(String roman) {

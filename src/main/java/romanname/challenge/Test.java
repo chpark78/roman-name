@@ -39,6 +39,7 @@ public class Test {
       boolean expected = testData[3].equals("O");
 
       MatchedResult actual = matcher.matching(hangleName, romanFirstName, romanLastName);
+      System.out.println(actual);
 
       long elapsedTimeMillis = System.currentTimeMillis() - startTimeMillis;
       if (expected == actual.isMatched()) {
