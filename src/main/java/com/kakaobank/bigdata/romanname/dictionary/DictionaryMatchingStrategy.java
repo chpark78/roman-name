@@ -3,16 +3,17 @@ package com.kakaobank.bigdata.romanname.dictionary;
 import com.kakaobank.bigdata.romanname.HangleRomanMatchingStrategy;
 import com.kakaobank.bigdata.romanname.MatchedEntry;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-import static java.util.Collections.singletonList;
+import static java.util.Collections.emptyMap;
 
 public class DictionaryMatchingStrategy implements HangleRomanMatchingStrategy {
 
   private volatile Map<String, Set<String>> dictionary;
+
+  public DictionaryMatchingStrategy() {
+    this(emptyMap());
+  }
 
   public DictionaryMatchingStrategy(Map<String, Set<String>> dictionary) {
     this.dictionary = dictionary;
@@ -24,21 +25,48 @@ public class DictionaryMatchingStrategy implements HangleRomanMatchingStrategy {
   }
 
   @Override
-  public List<MatchedEntry> match(String hangleName, String romanName, boolean lastName) {
-    Set<String> names = dictionary.get(romanName);
-    if (names == null && lastName) {
-      names = dictionary.get("^" + romanName);
-    }
+  public List<MatchedEntry> match(String hangleName, String romanName) {
+    String hangleLastName = null;
+    String hangleFirstName = null;
+    String[] romanNameParts = romanName.split(" ");
+    String romanLastName = romanNameParts[0];
+    String romanFirstName = romanNameParts[1];
 
-    if (names != null) {
-      for (String name : names) {
-        if (lastName ? hangleName.startsWith(name) : hangleName.endsWith(name)) {
-          return singletonList(new MatchedEntry(name, romanName, true));
+    boolean lastNameMatched = false;
+    Set<String> matchedLastNames = dictionary.get(romanLastName);
+    if (matchedLastNames == null) {
+      matchedLastNames = dictionary.get("^" + romanLastName);
+    }
+    if (matchedLastNames != null) {
+      for (String matchedLastName : matchedLastNames) {
+        if (hangleName.startsWith(matchedLastName)) {
+          lastNameMatched = true;
+          hangleLastName = matchedLastName;
+          hangleFirstName = hangleName.substring(matchedLastName.length());
         }
       }
     }
 
-    return singletonList(new MatchedEntry(hangleName, romanName, false));
+    boolean firstNameMatched = false;
+    Set<String> matchedFirstNames = dictionary.get(romanFirstName);
+    if (matchedFirstNames != null) {
+      for (String matchedFirstName : matchedFirstNames) {
+        if (hangleName.endsWith(matchedFirstName)) {
+          firstNameMatched = true;
+          hangleLastName = hangleName.substring(0, hangleName.length() - matchedFirstName.length());
+          hangleFirstName = matchedFirstName;
+        }
+      }
+    }
+
+    List<MatchedEntry> result = new ArrayList<>(2);
+    if (lastNameMatched || firstNameMatched) {
+      result.add(new MatchedEntry(hangleLastName, romanLastName, lastNameMatched));
+      result.add(new MatchedEntry(hangleFirstName, romanFirstName, firstNameMatched));
+    } else {
+      result.add(new MatchedEntry(hangleName, romanName, false));
+    }
+    return result;
   }
 
 }

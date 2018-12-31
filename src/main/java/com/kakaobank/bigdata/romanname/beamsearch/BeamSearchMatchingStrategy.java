@@ -6,6 +6,8 @@ import com.kakaobank.bigdata.romanname.util.TextUtils;
 
 import java.util.*;
 
+import static java.util.Collections.emptySet;
+
 public class BeamSearchMatchingStrategy implements HangleRomanMatchingStrategy {
 
   private static final String DICT_TYPE_SYLLABLE = "SYLLABLE";
@@ -17,6 +19,10 @@ public class BeamSearchMatchingStrategy implements HangleRomanMatchingStrategy {
   private final int beamWidth;
 
   private volatile Set<String> data;
+
+  public BeamSearchMatchingStrategy() {
+    this(emptySet());
+  }
 
   public BeamSearchMatchingStrategy(Set<String> data) {
     this(data, 10);
@@ -33,7 +39,7 @@ public class BeamSearchMatchingStrategy implements HangleRomanMatchingStrategy {
   }
 
   @Override
-  public List<MatchedEntry> match(String hangleName, String romanName, boolean lastName) {
+  public List<MatchedEntry> match(String hangleName, String romanName) {
     String[] hangles = hangleName.split(TextUtils.hangleSplitter());
 
     BeamQueue queue = new BeamQueue(beamWidth);
@@ -52,7 +58,7 @@ public class BeamSearchMatchingStrategy implements HangleRomanMatchingStrategy {
           String roman = romanName.substring(start, j);
 
           BeamNode node = new BeamNode(prev);
-          int score = matchedScoreBySyllable(hangle, roman, (i == 0));
+          int score = calcMatchedScore(hangle, roman);
           int lastIndex = (romanName.charAt(j) == ' ' ? j + 1 : j);
 
           node.add(new MatchedEntry(hangle, roman, (score == MATCHED_SCORE)), score);
@@ -67,7 +73,7 @@ public class BeamSearchMatchingStrategy implements HangleRomanMatchingStrategy {
     String hangle = hangles[hangles.length - 1];
     for (BeamNode node : queue) {
       String roman = romanName.substring(node.getLastIndex());
-      int score = matchedScoreBySyllable(hangle, roman, false);
+      int score = calcMatchedScore(hangle, roman);
 
       node.add(new MatchedEntry(hangle, roman, (score == MATCHED_SCORE)), score);
       lastQueue.add(node);
@@ -77,7 +83,7 @@ public class BeamSearchMatchingStrategy implements HangleRomanMatchingStrategy {
     return maxNode.getEntries();
   }
 
-  private int matchedScoreBySyllable(String hangle, String roman, boolean lastName) {
+  int calcMatchedScore(String hangle, String roman) {
     if (hangle.length() != 1) {
       return 0;
     }
@@ -86,20 +92,13 @@ public class BeamSearchMatchingStrategy implements HangleRomanMatchingStrategy {
       return MATCHED_SCORE;
     }
 
-    if (lastName && data.contains(generateKey(hangle, "^" + roman, DICT_TYPE_SYLLABLE))) {
-      return MATCHED_SCORE;
-    }
-
     List<String> hangleJaso = TextUtils.hangleToJaso(hangle);
     List<String> romanJaso = updateRomanJaso(TextUtils.romanToJaso(roman), hangleJaso);
-
     int matchedCount = 0;
+
     for (int i = 0; i < hangleJaso.size(); i++) {
       String type = DICT_TYPE_JOSA_LIST[i];
-
       if (data.contains(generateKey(hangleJaso.get(i), romanJaso.get(i), type))) {
-        matchedCount += 1;
-      } else if (lastName && data.contains(generateKey(hangleJaso.get(i), "^" + romanJaso.get(i), type))) {
         matchedCount += 1;
       } else if (i == 1 && !hangleJaso.get(2).isEmpty() && data.contains(generateKey(hangleJaso.get(i), romanJaso.get(i) + "+", type))) {
         matchedCount += 1;
@@ -130,7 +129,6 @@ public class BeamSearchMatchingStrategy implements HangleRomanMatchingStrategy {
     if (!hangleJongsung.isEmpty() && !romanJungsung.isEmpty() && romanJongsung.isEmpty()) {
       int romanJungsungLastIndex = romanJungsung.length() - 1;
       String romanJungsungLast = String.valueOf(romanJungsung.charAt(romanJungsungLastIndex));
-
       if (romanJungsungLast.equals("R") || romanJungsungLast.equals("H")) {
         if (data.contains(generateKey(hangleJongsung, romanJungsungLast, DICT_TYPE_JOSA_LIST[2]))) {
           romanJungsung = romanJungsung.substring(0, romanJungsungLastIndex);

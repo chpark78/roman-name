@@ -4,7 +4,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -15,27 +15,28 @@ public class DefaultDictionaryTest {
 
   @Test
   public void reloadTest() throws Exception {
-    List<String> dictOld = Arrays.asList(
+    Set<String> dictOld = new HashSet<>(Arrays.asList(
         "CHOSUNG|ㄱ|K",
         "JUNGSUNG|ㅣ|I",
         "JONGSUNG|ㅁ|M"
-    );
+    ));
 
-    List<String> dictNew = Arrays.asList(
+    Set<String> dictNew = new HashSet<>(Arrays.asList(
         "CHOSUNG|ㄱ|K",
         "JUNGSUNG|ㅣ|I",
         "JONGSUNG|ㅏ|A",
         "JONGSUNG|ㅁ|M"
-    );
+    ));
 
     DictionaryLoader dictionaryLoader = mock(DictionaryLoader.class);
-    when(dictionaryLoader.load()).thenReturn(new HashSet<>(dictOld));
+    when(dictionaryLoader.load()).thenReturn(dictOld);
 
     Dictionary dictionary = new DefaultDictionary(dictionaryLoader);
+    dictionary.reload();
     assertTrue(dictionary.getData().contains("CHOSUNG|ㄱ|K"));
     assertFalse(dictionary.getData().contains("JONGSUNG|ㅏ|A"));
 
-    when(dictionaryLoader.load()).thenReturn(new HashSet<>(dictNew));
+    when(dictionaryLoader.load()).thenReturn(dictNew);
     dictionary.reload();
     assertTrue(dictionary.getData().contains("CHOSUNG|ㄱ|K"));
     assertTrue(dictionary.getData().contains("JONGSUNG|ㅏ|A"));

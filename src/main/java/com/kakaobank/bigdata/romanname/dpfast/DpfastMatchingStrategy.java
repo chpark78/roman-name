@@ -2,41 +2,54 @@ package com.kakaobank.bigdata.romanname.dpfast;
 
 import com.kakaobank.bigdata.romanname.HangleRomanMatchingStrategy;
 import com.kakaobank.bigdata.romanname.MatchedEntry;
+import com.kakaobank.bigdata.romanname.data.JasoRomanDictionary;
+import com.kakaobank.bigdata.romanname.data.SyllableParser;
+import com.kakaobank.bigdata.romanname.data.SyllableRomanParser;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DpfastMatchingStrategy implements HangleRomanMatchingStrategy {
 
-  private volatile Map<Character, LinkedCharSequence> romanSequenceForSyllable;
+  private volatile SyllableRomanSequenceMap syllableRomanSequenceMap;
 
-  public DpfastMatchingStrategy(Map<Character, LinkedCharSequence> romanSequenceForSyllable) {
-    this.romanSequenceForSyllable = romanSequenceForSyllable;
+  public DpfastMatchingStrategy() {
+    this(new SyllableRomanSequenceMap(new SyllableRomanDictionary(new JasoRomanDictionary())));
+  }
+
+  public DpfastMatchingStrategy(SyllableRomanSequenceMap syllableRomanSequenceMap) {
+    this.syllableRomanSequenceMap = syllableRomanSequenceMap;
   }
 
   @Override
   public void dataReloaded(Collection<String> data) {
-    Collection<String> syllables = new SyllableBuilder().build(data);
-    List<String> syllableRomanPairs = new SyllableRomanPairBuilder().build(syllables, data);
-    this.romanSequenceForSyllable = new SyllableRomanSequenceBuilder().build(syllableRomanPairs);
+    JasoRomanDictionary jasoRomanDictionary = new JasoRomanDictionary().load(data);
+    SyllableRomanDictionary syllableRomanDictionary = new SyllableRomanDictionary(jasoRomanDictionary);
+    SyllableRomanSequenceMap syllableRomanSequenceMap = new SyllableRomanSequenceMap(syllableRomanDictionary);
+
+    Map<Character, Set<String>> syllableRomans = new SyllableRomanParser().parse(data);
+    for (Map.Entry<Character, Set<String>> syllableRomansEntry : syllableRomans.entrySet()) {
+      Character syllable = syllableRomansEntry.getKey();
+      Set<String> romans = syllableRomansEntry.getValue();
+      for (String roman : romans) {
+        syllableRomanSequenceMap.add(syllable, roman);
+      }
+    }
+
+    Collection<Character> syllables = new SyllableParser().parse(data);
+    syllableRomanSequenceMap.load(syllables);
+
+    this.syllableRomanSequenceMap = syllableRomanSequenceMap;
   }
 
   @Override
-  public List<MatchedEntry> match(String hangleName, String romanName, boolean lastName) {
+  public List<MatchedEntry> match(String hangleName, String romanName) {
     List<MatchedEntry> matchedEntries = new ArrayList<>(hangleName.length());
-    findMatches(hangleName, romanName, matchedEntries);
-    return matchedEntries;
-  }
 
-  private boolean findMatches(String hangleName, String romanName, List<MatchedEntry> matchedEntries) {
     List<CharSequenceFinder> finders = new ArrayList<>(hangleName.length());
-    int lastHandleNameIndex = hangleName.length() - 1;
-    int matchedEntriesBeginIndex = matchedEntries.size();
-    for (int handleNameIndex = 0; handleNameIndex <= lastHandleNameIndex; handleNameIndex++) {
-      char hangleChar = hangleName.charAt(handleNameIndex);
-      LinkedCharSequence romanSequence = romanSequenceForSyllable.get(hangleChar);
+    int lastFinerIndex = hangleName.length() - 1;
+    for (int i = 0; i <= lastFinerIndex; i++) {
+      char hangleChar = hangleName.charAt(i);
+      LinkedCharSequence romanSequence = syllableRomanSequenceMap.get(hangleChar);
       finders.add(new CharSequenceFinder(romanSequence, romanName));
       matchedEntries.add(new MatchedEntry(String.valueOf(hangleChar), "", false));
     }
@@ -51,30 +64,30 @@ public class DpfastMatchingStrategy implements HangleRomanMatchingStrategy {
         finder.find(romanNameIndex);
       }
 
-      if (hangleNameIndex == lastHandleNameIndex) {
+      if (hangleNameIndex == lastFinerIndex) {
         while (finder.hasNext()) {
           romanNameIndex = finder.next() + 1;
           if (romanNameIndex == romanNameLength) {
-            matchedEntries.set(matchedEntriesBeginIndex + hangleNameIndex,
+            matchedEntries.set(hangleNameIndex,
                                newMatchedEntry(finder, hangleName, hangleNameIndex, romanName, romanNameIndex));
-            return true;
+            return matchedEntries;
           }
         }
       } else if (finder.hasNext()) {
         romanNameIndex = finder.next() + 1;
-        matchedEntries.set(matchedEntriesBeginIndex + hangleNameIndex,
+        matchedEntries.set(hangleNameIndex,
                            newMatchedEntry(finder, hangleName, hangleNameIndex, romanName, romanNameIndex));
         rollback = false;
         continue;
       } else if (hangleNameIndex == 0) {
-        return false;
+        return matchedEntries;
       }
 
       rollback = true;
       hangleNameIndex -= 2;
     }
 
-    return false;
+    return matchedEntries;
   }
 
   private MatchedEntry newMatchedEntry(CharSequenceFinder finder,

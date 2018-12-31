@@ -18,7 +18,10 @@ public class TextUtils {
       return Collections.emptyList();
     }
 
-    char ch = s.charAt(0);
+    return hangleToJaso(s.charAt(0));
+  }
+
+  public static List<String> hangleToJaso(char ch) {
     if (ch >= 0xAC00 && ch <= 0xD7A3) {
       int a, b, c;
       c = ch - 0xAC00;

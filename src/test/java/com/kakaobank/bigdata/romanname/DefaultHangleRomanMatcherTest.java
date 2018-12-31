@@ -20,9 +20,9 @@ public class DefaultHangleRomanMatcherTest {
     // HangleRomanMatcher 객체를 생성
     HangleRomanMatcher matcher = new DefaultHangleRomanMatcher(dictionary);
 
-    String hangleName = "김찬호";
-    String lastName = "KIMP";
-    String firstName = "PANHO";
+    String hangleName = "박요수아";
+    String lastName = "PARK";
+    String firstName = "JOSUA";
 
     // 미리 생성한 HangleRomanMatcher 객체로 부터 matching 함수 실행
     MatchedResult result = matcher.matching(hangleName, firstName, lastName);

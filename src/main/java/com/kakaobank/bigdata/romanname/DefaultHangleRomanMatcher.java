@@ -1,56 +1,52 @@
 package com.kakaobank.bigdata.romanname;
 
+import com.kakaobank.bigdata.romanname.beamsearch.BeamSearchMatchingStrategy;
 import com.kakaobank.bigdata.romanname.dictionary.DictionaryMatchingStrategy;
 import com.kakaobank.bigdata.romanname.dpfast.DpfastMatchingStrategy;
-import com.kakaobank.bigdata.romanname.util.TextUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.util.Collections.emptyMap;
+import static com.kakaobank.bigdata.romanname.util.TextUtils.normalize;
 
 public class DefaultHangleRomanMatcher implements HangleRomanMatcher {
 
   private final HangleRomanMatchingStrategy dictionaryStrategy;
   private final HangleRomanMatchingStrategy dpfastStrategy;
+  private final HangleRomanMatchingStrategy beamSearchStrategy;
 
   public DefaultHangleRomanMatcher(Dictionary dictionary) throws Exception {
-    dictionaryStrategy = new DictionaryMatchingStrategy(emptyMap());
-    dpfastStrategy = new DpfastMatchingStrategy(emptyMap());
+    dictionaryStrategy = new DictionaryMatchingStrategy();
+    dpfastStrategy = new DpfastMatchingStrategy();
+    beamSearchStrategy = new BeamSearchMatchingStrategy();
 
     dictionary.addListener(dictionaryStrategy);
     dictionary.addListener(dpfastStrategy);
+    dictionary.addListener(beamSearchStrategy);
 
     dictionary.reload();
   }
 
   @Override
-  public MatchedResult matching(String hangleName, String firstName, String lastName) {
-    String romanFirstName = TextUtils.normalize(firstName);
-    String romanLastName = TextUtils.normalize(lastName);
+  public MatchedResult matching(String hangleName, String romanFirstName, String romanLastName) {
+    String romanName = normalize(romanFirstName) + " " + normalize(romanLastName);
 
     List<MatchedEntry> matchedEntries = new ArrayList<>(hangleName.length());
-
-    MatchedEntry mismatchedLastName = match(hangleName, romanLastName, true, matchedEntries);
-    hangleName = mismatchedLastName.getHangle();
-    romanLastName = mismatchedLastName.getRoman();
-
-    System.out.println("hangleName: " + hangleName);
-    System.out.println("romanLastName: " + romanLastName);
-
-    if (!romanLastName.isEmpty()) {
-      matchedEntries.add(mismatchedLastName);
-    }
-
-    MatchedEntry mismatchedFirstName = match(hangleName, romanFirstName, false, matchedEntries);
-    hangleName = mismatchedFirstName.getHangle();
-    romanFirstName = mismatchedFirstName.getRoman();
-
-    System.out.println("hangleName: " + hangleName);
-    System.out.println("romanFirstName: " + romanFirstName);
-
-    if (!romanFirstName.isEmpty()) {
-      matchedEntries.add(mismatchedFirstName);
+    List<MatchedEntry> dictionaryResults = dictionaryStrategy.match(hangleName, romanName);
+    for (MatchedEntry dictionaryResult : dictionaryResults) {
+      if (dictionaryResult.isMatched()) {
+        matchedEntries.add(dictionaryResult);
+      } else {
+        List<MatchedEntry> dpfastResults = dpfastStrategy.match(dictionaryResult.getHangle(), dictionaryResult.getRoman());
+        for (MatchedEntry dpfastResult : dpfastResults) {
+          if (dpfastResult.isMatched()) {
+            matchedEntries.add(dpfastResult);
+          } else {
+            List<MatchedEntry> beamSearchResults = beamSearchStrategy.match(dpfastResult.getHangle(), dpfastResult.getRoman());
+            matchedEntries.addAll(beamSearchResults);
+          }
+        }
+      }
     }
 
     boolean matched = matchedEntries.stream()
@@ -59,23 +55,6 @@ public class DefaultHangleRomanMatcher implements HangleRomanMatcher {
                                     .orElse(false);
 
     return new MatchedResult(matched, matchedEntries);
-  }
-
-  private MatchedEntry match(String hangleName, String romanName, boolean lastName, List<MatchedEntry> matchedEntries) {
-    List<MatchedEntry> nameEntries = dictionaryStrategy.match(hangleName, romanName, lastName);
-    if (!nameEntries.get(0).isMatched()) {
-      nameEntries = dpfastStrategy.match(nameEntries.get(0).getHangle(), romanName, lastName);
-    }
-
-    for (MatchedEntry nameEntry : nameEntries) {
-      if (nameEntry.isMatched()) {
-        hangleName = hangleName.substring(nameEntry.getHangle().length()).trim();
-        romanName = romanName.substring(nameEntry.getRoman().length()).trim();
-        matchedEntries.add(nameEntry);
-      }
-    }
-
-    return new MatchedEntry(hangleName, romanName, false);
   }
 
 }

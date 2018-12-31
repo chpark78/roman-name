@@ -1,13 +1,13 @@
 package com.kakaobank.bigdata.romanname.dpfast;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class LinkedCharSequence {
 
   private final char self;
 
-  private final Map<Character, LinkedCharSequence> children = new HashMap<>();
+  private final ConcurrentMap<Character, LinkedCharSequence> children = new ConcurrentHashMap<>();
 
   public LinkedCharSequence(char self) {
     this.self = self;

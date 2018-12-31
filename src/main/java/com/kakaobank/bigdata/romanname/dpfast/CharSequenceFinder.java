@@ -20,9 +20,10 @@ public class CharSequenceFinder implements Iterator<Integer> {
   }
 
   public void find(int beginIndex) {
+    this.beginIndex = beginIndex;
     matches = new LinkedList<>();
     LinkedCharSequence currentSeq = seq;
-    for (int i = this.beginIndex = beginIndex; i < str.length(); i++) {
+    for (int i = beginIndex; i < str.length(); i++) {
       char ch = str.charAt(i);
       if (ch == ' ') {
         if (i == beginIndex) {
